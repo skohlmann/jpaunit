@@ -12,13 +12,13 @@ public class JpaUnitTestExecutionListener extends AbstractTestExecutionListener 
 
     @Override
     public void beforeTestMethod(final TestContext testContext) throws Exception {
-        newJpaUnit(testContext).setup(testContext.getTestClass(), testContext.getTestMethod());
+        newJpaUnit(testContext).setup(testContext.getTestClass(), testContext.getTestMethod().getName());
     }
 
     @Override
     public void afterTestMethod(final TestContext testContext) throws Exception {
         if (testContext.getTestException() == null) {
-            newJpaUnit(testContext).expect(testContext.getTestClass(), testContext.getTestMethod());
+            newJpaUnit(testContext).expect(testContext.getTestClass(), testContext.getTestMethod().getName());
         }
     }
 

@@ -12,24 +12,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.CharStreams;
-import com.zimory.jpaunit.core.Dao.ExecuteInTransaction;
+import com.zimory.jpaunit.core.Dao.WithTransaction;
 import com.zimory.jpaunit.core.annotation.ShouldMatchJpaDataSet;
 import com.zimory.jpaunit.core.annotation.UsingJpaDataSet;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.TestClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,8 +49,9 @@ public final class JpaUnit {
         this.context = context;
     }
 
-    public void setup(final Class<?> testClass, final Method testMethod) throws IOException {
-        final Set<Object> entities = readSetupEntities(testClass, testMethod);
+    public void setup(final Class<?> testClass, final String testMethodName) throws IOException {
+        final TestContext testContext = new TestContext(testClass, testMethodName);
+        final Set<Object> entities = readSetupEntities(testContext);
 
         if (entities.isEmpty()) {
             return;
@@ -64,11 +60,18 @@ public final class JpaUnit {
         persist(entities);
     }
 
-    public void expect(final Class<?> testClass, final Method testMethod) throws IOException {
-        final List<Method> methods = getEligibleMethods(testClass, testMethod, After.class);
-        final String raw = readRaw(methods, ShouldMatchJpaDataSet.class);
+    private Set<Object> readSetupEntities(final TestContext testContext) throws IOException {
+        final List<Method> methods = testContext.getSetupMethods();
+        final String raw = readRaw(methods, UsingJpaDataSet.class);
+
+        return readEntities(raw);
+    }
+
+    public void expect(final Class<?> testClass, final String testMethodName) throws IOException {
+        final TestContext testContext = new TestContext(testClass, testMethodName);
+        final String raw = readRaw(testContext.getExpectMethods(), ShouldMatchJpaDataSet.class);
         final Set<Object> entities = readEntities(raw);
-        final Set<Object> setupEntities = readSetupEntities(testClass, testMethod);
+        final Set<Object> setupEntities = readSetupEntities(testContext);
 
         if (entities.isEmpty()) {
             return;
@@ -77,65 +80,38 @@ public final class JpaUnit {
         compare(entities, setupEntities);
     }
 
-    private Set<Object> readSetupEntities(final Class<?> testClass, final Method testMethod) throws IOException {
-        final List<Method> methods = getEligibleMethods(testClass, testMethod, Before.class);
-        final String raw = readRaw(methods, UsingJpaDataSet.class);
-
-        return readEntities(raw);
-    }
-
-    private static ImmutableList<Method> getEligibleMethods(
-            final Class<?> testClass, final Method testMethod, final Class<? extends Annotation> a) {
-        return ImmutableList.<Method>builder()
-                .addAll(getAnnotatedMethods(testClass, a))
-                .add(testMethod)
-                .build();
-    }
-
-    private static List<Method> getAnnotatedMethods(final Class<?> testClass, final Class<? extends Annotation> a) {
-        final List<Method> transformed = Lists.transform(new TestClass(testClass).getAnnotatedMethods(a),
-                new Function<FrameworkMethod, Method>() {
-                    @Override
-                    public Method apply(final FrameworkMethod input) {
-                        return input.getMethod();
-                    }
-                });
-
-        final ImmutableList<Method> result = ImmutableList.copyOf(transformed);
-
-        // JUnit orders @Afters starting from subclass to superclass, but we need it in reverse
-        return a == After.class ? result.reverse() : result;
-    }
-
     private void persist(final Set<Object> entities) {
-        final Dao dao = context.dao();
-
-        try {
-            dao.persist(entities);
-        } finally {
-            dao.close();
-        }
+        context.dao().persist(entities);
     }
 
     private void compare(final Set<Object> expectedEntities, final Set<Object> setupEntities) {
         final Dao dao = context.dao();
 
-        try {
-            dao.withTransaction(new ExecuteInTransaction() {
-                @Override
-                public void execute() {
-                    compareExpectedEntities(expectedEntities, dao);
-                    compareExpectedToBeRemovedEntities(setupEntities, expectedEntities, dao);
-                }
-            });
-        } finally {
-            dao.close();
-        }
+        dao.withTransaction(new WithTransaction() {
+            @Override
+            public void execute(final EntityManager em, final EntityTransaction tx) {
+                final Set<EntityWrapper> wrappedExpectedEntities = EntityWrapper.wrap(dao, expectedEntities);
+                final Set<EntityWrapper> wrappedSetupEntities = EntityWrapper.wrap(dao, setupEntities);
+
+                compareExpectedEntities(wrappedExpectedEntities, dao, em);
+                compareExpectedToBeRemovedEntities(wrappedSetupEntities, wrappedExpectedEntities, dao, em);
+            }
+        });
     }
 
-    private void compareExpectedEntities(final Set<Object> expectedEntities, final Dao dao) {
-        for (final Object expectedEntity : expectedEntities) {
-            final Object actualEntity = dao.findActualEntityFor(expectedEntity);
+    private void compareExpectedEntities(
+            final Set<EntityWrapper> expectedEntities,
+            final Dao dao,
+            final EntityManager em) {
+        for (final EntityWrapper entityWrapper : expectedEntities) {
+            final Object expectedEntity = entityWrapper.getEntity();
+
+            final Object id = dao.getIdFor(expectedEntity);
+            final Class<?> entityClass = expectedEntity.getClass();
+            LOGGER.debug("Looking up entity of class {} with ID {}", entityClass, id);
+
+            final Object actualEntity = em.find(entityClass, id);
+            LOGGER.debug("Found: {}", actualEntity);
 
             LOGGER.debug("Comparing:\n  expected: {}\n    actual: {}", expectedEntity, actualEntity);
             CustomReflectionAssert.assertReflectionEquals(expectedEntity, actualEntity);
@@ -143,12 +119,24 @@ public final class JpaUnit {
     }
 
     private void compareExpectedToBeRemovedEntities(
-            final Set<Object> setupEntities, final Set<Object> expectedEntities, final Dao dao) {
-        final Set<Object> expectedToBeRemoved = Sets.difference(setupEntities, expectedEntities);
+            final Set<EntityWrapper> setupEntities,
+            final Set<EntityWrapper> expectedEntities,
+            final Dao dao,
+            final EntityManager em) {
+        final Set<EntityWrapper> expectedToBeRemoved = Sets.difference(setupEntities, expectedEntities);
 
-        for (final Object expected : expectedToBeRemoved) {
-            LOGGER.debug("Expecting to be removed:\n  {}", expected);
-            assertThat("Expected to be removed, but was present", dao.findActualEntityFor(expected), nullValue());
+        for (final EntityWrapper entityWrapper : expectedToBeRemoved) {
+            final Object expectedEntity = entityWrapper.getEntity();
+
+            final Object id = dao.getIdFor(expectedEntity);
+            final Class<?> entityClass = expectedEntity.getClass();
+            LOGGER.debug("Looking up entity of class {} with ID {}", entityClass, id);
+
+            final Object actualEntity = em.find(entityClass, id);
+            LOGGER.debug("Found: {}", actualEntity);
+
+            LOGGER.debug("Expecting to be removed:\n  {}", expectedEntity);
+            assertThat("Expected to be removed, but was present", actualEntity, nullValue());
         }
     }
 

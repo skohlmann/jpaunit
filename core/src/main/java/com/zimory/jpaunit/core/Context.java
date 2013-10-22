@@ -1,6 +1,5 @@
 package com.zimory.jpaunit.core;
 
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.EntityType;
 
@@ -22,7 +21,7 @@ class Context {
         yamlConfig.writeConfig.setIndentSize(2);
         yamlConfig.setPrivateFields(true);
 
-        for (final YamlScalarSerializer serializer : config.getSerializers()) {
+        for (final YamlScalarSerializer serializer : config.getAllSerializers()) {
             yamlConfig.setScalarSerializer(serializer.getType(), Serializers.scalarSerializerOf(serializer));
         }
 
@@ -38,11 +37,7 @@ class Context {
     }
 
     Dao dao() {
-        return new Dao(newEntityManager(), config.getEntityTypeOrdering());
-    }
-
-    private EntityManager newEntityManager() {
-        return entityManagerFactory.createEntityManager();
+        return new Dao(entityManagerFactory, config.getEntityTypeOrdering());
     }
 
 }

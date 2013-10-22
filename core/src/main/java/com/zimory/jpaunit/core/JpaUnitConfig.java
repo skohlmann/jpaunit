@@ -5,16 +5,22 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.zimory.jpaunit.core.annotation.GenerateExpectedDataSet;
 import com.zimory.jpaunit.core.annotation.GenerateSetupDataSet;
+import com.zimory.jpaunit.core.serialization.UuidSerializer;
 import com.zimory.jpaunit.core.serialization.YamlScalarSerializer;
 
 public class JpaUnitConfig {
 
     public static final String DEFAULT_DATASET_DIR = "/datasets";
+    public static final List<? extends YamlScalarSerializer<?>> DEFAULT_SERIALIZERS = ImmutableList.of(new UuidSerializer());
 
     private String datasetDir = DEFAULT_DATASET_DIR;
-    private List<? extends YamlScalarSerializer<?>> serializers = ImmutableList.of();
+
+    private boolean useDefaultSerializers = true;
+    private List<YamlScalarSerializer<?>> customSerializers = ImmutableList.of();
+
     private Comparator<Class<?>> entityTypeOrdering;
     private String writerBaseDir = System.getProperty("user.dir");
 
@@ -29,12 +35,32 @@ public class JpaUnitConfig {
         this.datasetDir = datasetDir;
     }
 
-    public List<? extends YamlScalarSerializer<?>> getSerializers() {
-        return serializers;
+    public List<YamlScalarSerializer<?>> getAllSerializers() {
+        final Builder<YamlScalarSerializer<?>> builder = ImmutableList.builder();
+
+        if (useDefaultSerializers) {
+            builder.addAll(DEFAULT_SERIALIZERS);
+        }
+
+        builder.addAll(customSerializers);
+
+        return builder.build();
     }
 
-    public void setSerializers(final List<? extends YamlScalarSerializer<?>> serializers) {
-        this.serializers = ImmutableList.copyOf(serializers);
+    public boolean isUseDefaultSerializers() {
+        return useDefaultSerializers;
+    }
+
+    public void setUseDefaultSerializers(final boolean useDefaultSerializers) {
+        this.useDefaultSerializers = useDefaultSerializers;
+    }
+
+    public List<YamlScalarSerializer<?>> getCustomSerializers() {
+        return customSerializers;
+    }
+
+    public void setCustomSerializers(final List<YamlScalarSerializer<?>> customSerializers) {
+        this.customSerializers = ImmutableList.copyOf(customSerializers);
     }
 
     public Comparator<Class<?>> getEntityTypeOrdering() {

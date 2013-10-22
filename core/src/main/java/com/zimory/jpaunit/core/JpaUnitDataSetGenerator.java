@@ -6,12 +6,14 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 
 import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlWriter;
-import com.zimory.jpaunit.core.Dao.ExecuteInTransaction;
+import com.zimory.jpaunit.core.Dao.WithTransaction;
 
 public class JpaUnitDataSetGenerator {
 
@@ -50,12 +52,12 @@ public class JpaUnitDataSetGenerator {
             throw new RuntimeException(e);
         }
 
-        final Dao dao = context.dao();
-
         try {
-            dao.withTransaction(new ExecuteInTransaction() {
+            final Dao dao = context.dao();
+
+            dao.withTransaction(new WithTransaction() {
                 @Override
-                public void execute() {
+                public void execute(final EntityManager em, final EntityTransaction tx) {
                     try {
                         for (final Object entity : dao.findAll()) {
                             writer.write(entity);
@@ -71,8 +73,6 @@ public class JpaUnitDataSetGenerator {
             } catch (final YamlException e) {
                 e.printStackTrace();
             }
-
-            dao.close();
         }
     }
 

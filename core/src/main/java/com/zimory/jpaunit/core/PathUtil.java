@@ -12,13 +12,15 @@ import com.zimory.jpaunit.core.annotation.UsingJpaDataSet;
 
 final class PathUtil {
 
-    static final String EXPECTED_PREFIX = "expected-";
+    private static final String EXPECTED_PREFIX = "expected-";
+
+    private static final String YAML_EXTENSION = "yml";
 
     private PathUtil() {
         throw new UnsupportedOperationException("Non-instantiable");
     }
 
-    static String[] getRelativePaths(final Method m, final UsingJpaDataSet a) {
+    public static String[] getRelativePaths(final Method m, final UsingJpaDataSet a) {
         if (a.value().length > 0) {
             return a.value();
         }
@@ -26,7 +28,7 @@ final class PathUtil {
         return new String[] {getSetupDataSetPath(m)};
     }
 
-    static String[] getRelativePaths(final Method m, final ShouldMatchJpaDataSet a) {
+    public static String[] getRelativePaths(final Method m, final ShouldMatchJpaDataSet a) {
         if (a.value().length > 0) {
             return a.value();
         }
@@ -34,7 +36,7 @@ final class PathUtil {
         return new String[] {getExpectedDataSetPath(m)};
     }
 
-    static String getGenerateSetupDataSetRelativePath(final Method m, final Annotation a) {
+    public static String getGenerateSetupDataSetRelativePath(final Method m, final Annotation a) {
         if (a instanceof GenerateSetupDataSet) {
             final GenerateSetupDataSet generateSetupDataSet = (GenerateSetupDataSet) a;
 
@@ -46,7 +48,7 @@ final class PathUtil {
         return getSetupDataSetPath(m);
     }
 
-    static String getGenerateExpectedDataSetRelativePath(final Method m, final Annotation a) {
+    public static String getGenerateExpectedDataSetRelativePath(final Method m, final Annotation a) {
         if (a instanceof GenerateExpectedDataSet) {
             final GenerateExpectedDataSet generateSetupDataSet = (GenerateExpectedDataSet) a;
 
@@ -58,16 +60,17 @@ final class PathUtil {
         return getExpectedDataSetPath(m);
     }
 
-    static String getSetupDataSetPath(final Method m) {
+    public static String getSetupDataSetPath(final Method m) {
         return m.getDeclaringClass().getSimpleName() + "/" + m.getName();
     }
 
-    static String getExpectedDataSetPath(final Method m) {
+    public static String getExpectedDataSetPath(final Method m) {
         return m.getDeclaringClass().getSimpleName() + "/" + EXPECTED_PREFIX + m.getName();
     }
 
-    static String formatYamlPath(final String baseDir, final String relativePath) {
-        final String extension = "yml".equals(Files.getFileExtension(relativePath)) ? "" : ".yml";
+    public static String formatYamlPath(final String baseDir, final String relativePath) {
+        final String extension = YAML_EXTENSION.equals(Files.getFileExtension(relativePath)) ? "" : "." + YAML_EXTENSION;
+
         return String.format("%s/%s%s", baseDir, relativePath, extension);
     }
 
