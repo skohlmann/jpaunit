@@ -18,6 +18,7 @@ import javax.persistence.metamodel.EntityType;
 import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlWriter;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSortedSet;
@@ -47,14 +48,14 @@ public class DefaultEntityWriter implements EntityWriter {
         final ImmutableList<Method> methods = testContext.getSetupMethods();
 
         for (final Method m : methods) {
-            final Annotation a = m.getAnnotation(config.getGenerateSetupDataSetAnnotation());
-
-            if (a != null) {
-                final String relativePath = PathUtil.getGenerateSetupDataSetRelativePath(m, a);
-                final String path = PathUtil.formatYamlPath(config.getWriterBaseDir(), relativePath);
-
-                writeEntities(path);
+            final Optional<String> relativePath = PathUtil.getGenerateSetupDataSetRelativePath(m, config);
+            if (!relativePath.isPresent()) {
+                continue;
             }
+
+            final String path = PathUtil.formatYamlPath(config.getWriterBaseDir(), relativePath.get());
+
+            writeEntities(path);
         }
     }
 
@@ -66,8 +67,12 @@ public class DefaultEntityWriter implements EntityWriter {
             final Annotation a = m.getAnnotation(config.getGenerateExpectedDataSetAnnotation());
 
             if (a != null) {
-                final String relativePath = PathUtil.getGenerateExpectedDataSetRelativePath(m, a);
-                final String path = PathUtil.formatYamlPath(config.getWriterBaseDir(), relativePath);
+                final Optional<String> relativePath = PathUtil.getGenerateExpectedDataSetRelativePath(m, config);
+                if (!relativePath.isPresent()) {
+                    continue;
+                }
+
+                final String path = PathUtil.formatYamlPath(config.getWriterBaseDir(), relativePath.get());
 
                 writeEntities(path);
             }

@@ -79,9 +79,9 @@ public class DefaultEntityReader implements EntityReader {
             final String[] paths;
 
             if (a instanceof UsingJpaDataSet) {
-                paths = PathUtil.getRelativePaths(m, (UsingJpaDataSet) a);
+                paths = PathUtil.getRelativeSetupPaths(m);
             } else if (a instanceof ShouldMatchJpaDataSet) {
-                paths = PathUtil.getRelativePaths(m, (ShouldMatchJpaDataSet) a);
+                paths = PathUtil.getRelativeExpectPaths(m);
             } else {
                 throw new IllegalStateException("Can't happen");
             }

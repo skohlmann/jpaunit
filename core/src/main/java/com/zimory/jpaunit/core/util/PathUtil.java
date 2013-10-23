@@ -1,14 +1,16 @@
 package com.zimory.jpaunit.core.util;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
-import com.zimory.jpaunit.core.annotation.GenerateExpectedDataSet;
-import com.zimory.jpaunit.core.annotation.GenerateSetupDataSet;
 import com.zimory.jpaunit.core.annotation.ShouldMatchJpaDataSet;
 import com.zimory.jpaunit.core.annotation.UsingJpaDataSet;
+import com.zimory.jpaunit.core.context.JpaUnitConfig;
+import org.unitils.util.ReflectionUtils;
 
 public final class PathUtil {
 
@@ -19,7 +21,9 @@ public final class PathUtil {
         throw new UnsupportedOperationException("Non-instantiable");
     }
 
-    public static String[] getRelativePaths(final Method m, final UsingJpaDataSet a) {
+    public static String[] getRelativeSetupPaths(final Method m) {
+        final UsingJpaDataSet a = m.getAnnotation(UsingJpaDataSet.class);
+
         if (a.value().length > 0) {
             return a.value();
         }
@@ -27,7 +31,9 @@ public final class PathUtil {
         return new String[] {getSetupDataSetPath(m)};
     }
 
-    public static String[] getRelativePaths(final Method m, final ShouldMatchJpaDataSet a) {
+    public static String[] getRelativeExpectPaths(final Method m) {
+        final ShouldMatchJpaDataSet a = m.getAnnotation(ShouldMatchJpaDataSet.class);
+
         if (a.value().length > 0) {
             return a.value();
         }
@@ -35,35 +41,60 @@ public final class PathUtil {
         return new String[] {getExpectedDataSetPath(m)};
     }
 
-    public static String getGenerateSetupDataSetRelativePath(final Method m, final Annotation a) {
-        if (a instanceof GenerateSetupDataSet) {
-            final GenerateSetupDataSet generateSetupDataSet = (GenerateSetupDataSet) a;
-
-            if (!Strings.isNullOrEmpty(generateSetupDataSet.value())) {
-                return generateSetupDataSet.value();
-            }
+    public static Optional<String> getGenerateSetupDataSetRelativePath(final Method m, final JpaUnitConfig config) {
+        final Annotation a = m.getAnnotation(config.getGenerateSetupDataSetAnnotation());
+        if (a == null) {
+            return Optional.absent();
         }
 
-        return getSetupDataSetPath(m);
-    }
+        final Optional<String> value = getValue(a);
 
-    public static String getGenerateExpectedDataSetRelativePath(final Method m, final Annotation a) {
-        if (a instanceof GenerateExpectedDataSet) {
-            final GenerateExpectedDataSet generateSetupDataSet = (GenerateExpectedDataSet) a;
-
-            if (!Strings.isNullOrEmpty(generateSetupDataSet.value())) {
-                return generateSetupDataSet.value();
-            }
+        if (value.isPresent()) {
+            return value;
         }
 
-        return getExpectedDataSetPath(m);
+        return Optional.of(getSetupDataSetPath(m));
     }
 
-    public static String getSetupDataSetPath(final Method m) {
+    public static Optional<String> getGenerateExpectedDataSetRelativePath(final Method m, final JpaUnitConfig config) {
+        final Annotation a = m.getAnnotation(config.getGenerateExpectedDataSetAnnotation());
+        if (a == null) {
+            return Optional.absent();
+        }
+
+        final Optional<String> value = getValue(a);
+
+        if (value.isPresent()) {
+            return value;
+        }
+
+        return Optional.of(getExpectedDataSetPath(m));
+    }
+
+    private static Optional<String> getValue(final Annotation a) {
+        final Method valueMethod = ReflectionUtils.getMethod(a.annotationType(), "value", false);
+
+        if (valueMethod == null || valueMethod.getReturnType() != String.class) {
+            return Optional.absent();
+        }
+
+        try {
+            final String value = ReflectionUtils.invokeMethod(a, valueMethod);
+            if (Strings.isNullOrEmpty(value)) {
+                return Optional.absent();
+            }
+
+            return Optional.of(value);
+        } catch (final InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static String getSetupDataSetPath(final Method m) {
         return m.getDeclaringClass().getSimpleName() + "/" + m.getName();
     }
 
-    public static String getExpectedDataSetPath(final Method m) {
+    private static String getExpectedDataSetPath(final Method m) {
         return m.getDeclaringClass().getSimpleName() + "/" + EXPECTED_PREFIX + m.getName();
     }
 
