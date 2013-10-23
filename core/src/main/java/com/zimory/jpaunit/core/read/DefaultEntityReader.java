@@ -9,7 +9,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -18,15 +17,18 @@ import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
 import com.google.common.io.CharStreams;
-import com.zimory.jpaunit.core.context.JpaUnitConfig;
-import com.zimory.jpaunit.core.util.PathUtil;
 import com.zimory.jpaunit.core.annotation.ShouldMatchJpaDataSet;
 import com.zimory.jpaunit.core.annotation.UsingJpaDataSet;
+import com.zimory.jpaunit.core.context.JpaUnitConfig;
 import com.zimory.jpaunit.core.context.TestContext;
+import com.zimory.jpaunit.core.util.PathUtil;
+import com.zimory.jpaunit.core.util.PathUtil.GetsPathsForMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -51,40 +53,33 @@ public class DefaultEntityReader implements EntityReader {
 
     @Override
     public Set<Object> readSetupEntities(final TestContext testContext) throws IOException {
-        final List<Method> methods = testContext.getSetupMethods();
-        final String raw = readRaw(methods, UsingJpaDataSet.class);
+        final ImmutableList<Method> setupMethods = testContext.getSetupMethods();
+        final Collection<Method> methods = Collections2.filter(setupMethods,
+                AnnotationFilter.by(UsingJpaDataSet.class));
+
+        final String raw = readRaw(methods, PathUtil.GETS_SETUP_PATHS);
 
         return readEntities(raw);
     }
 
     @Override
     public Set<Object> readExpectEntities(final TestContext testContext) throws IOException {
-        final ImmutableList<Method> methods = testContext.getExpectMethods();
-        final String raw = readRaw(methods, ShouldMatchJpaDataSet.class);
+        final ImmutableList<Method> expectMethods = testContext.getExpectMethods();
+        final Collection<Method> methods = Collections2.filter(expectMethods,
+                AnnotationFilter.by(ShouldMatchJpaDataSet.class));
+
+        final String raw = readRaw(methods, PathUtil.GETS_EXPECT_PATHS);
 
         return readEntities(raw);
     }
 
-    private String readRaw(final Collection<Method> methods, final Class<? extends Annotation> annotationCls) throws IOException {
+    private String readRaw(final Collection<Method> methods, final GetsPathsForMethod getsPaths)
+            throws IOException {
         final StringBuilder buf = new StringBuilder(DEFAULT_BUFFER_SIZE);
 
         for (final Iterator<Method> methodIterator = methods.iterator(); methodIterator.hasNext();) {
             final Method m = methodIterator.next();
-
-            final Annotation a = m.getAnnotation(annotationCls);
-            if (a == null) {
-                continue;
-            }
-
-            final String[] paths;
-
-            if (a instanceof UsingJpaDataSet) {
-                paths = PathUtil.getRelativeSetupPaths(m);
-            } else if (a instanceof ShouldMatchJpaDataSet) {
-                paths = PathUtil.getRelativeExpectPaths(m);
-            } else {
-                throw new IllegalStateException("Can't happen");
-            }
+            final String[] paths = getsPaths.apply(m);
 
             for (final Iterator<String> pathIterator = Iterators.forArray(paths); pathIterator.hasNext();) {
                 final String yamlPath = PathUtil.formatYamlPath(config.getDatasetDir(), pathIterator.next());
@@ -145,6 +140,25 @@ public class DefaultEntityReader implements EntityReader {
 
     private YamlReader newYamlReader(final Reader r) {
         return new YamlReader(r, yamlConfig);
+    }
+
+    private static final class AnnotationFilter implements Predicate<Method> {
+
+        private final Class<? extends Annotation> annotationType;
+
+        private AnnotationFilter(final Class<? extends Annotation> annotationType) {
+            this.annotationType = annotationType;
+        }
+
+        @Override
+        public boolean apply(final Method input) {
+            return input.getAnnotation(annotationType) != null;
+        }
+
+        public static AnnotationFilter by(final Class<? extends Annotation> annotationType) {
+            return new AnnotationFilter(annotationType);
+        }
+
     }
 
 }

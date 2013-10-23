@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
@@ -14,31 +15,40 @@ import org.unitils.util.ReflectionUtils;
 
 public final class PathUtil {
 
+    public interface GetsPathsForMethod extends Function<Method, String[]> {
+    }
+
+    public static final GetsPathsForMethod GETS_SETUP_PATHS = new GetsPathsForMethod() {
+        @Override
+        public String[] apply(final Method input) {
+            final UsingJpaDataSet a = input.getAnnotation(UsingJpaDataSet.class);
+
+            if (a.value().length > 0) {
+                return a.value();
+            }
+
+            return new String[] {getSetupDataSetPath(input)};
+        }
+    };
+
+    public static final GetsPathsForMethod GETS_EXPECT_PATHS = new GetsPathsForMethod() {
+        @Override
+        public String[] apply(final Method input) {
+            final ShouldMatchJpaDataSet a = input.getAnnotation(ShouldMatchJpaDataSet.class);
+
+            if (a.value().length > 0) {
+                return a.value();
+            }
+
+            return new String[] {getExpectedDataSetPath(input)};
+        }
+    };
+
     private static final String EXPECTED_PREFIX = "expected-";
     private static final String YAML_EXTENSION = "yml";
 
     private PathUtil() {
         throw new UnsupportedOperationException("Non-instantiable");
-    }
-
-    public static String[] getRelativeSetupPaths(final Method m) {
-        final UsingJpaDataSet a = m.getAnnotation(UsingJpaDataSet.class);
-
-        if (a.value().length > 0) {
-            return a.value();
-        }
-
-        return new String[] {getSetupDataSetPath(m)};
-    }
-
-    public static String[] getRelativeExpectPaths(final Method m) {
-        final ShouldMatchJpaDataSet a = m.getAnnotation(ShouldMatchJpaDataSet.class);
-
-        if (a.value().length > 0) {
-            return a.value();
-        }
-
-        return new String[] {getExpectedDataSetPath(m)};
     }
 
     public static Optional<String> getGenerateSetupDataSetRelativePath(final Method m, final JpaUnitConfig config) {

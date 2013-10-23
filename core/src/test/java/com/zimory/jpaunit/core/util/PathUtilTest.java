@@ -68,29 +68,29 @@ public class PathUtilTest {
     }
 
     @Test
-    public void getRelativeSetupPaths_whenValueIsNotEmptyThenReturnsValue() throws Exception {
-        final String[] paths = PathUtil.getRelativeSetupPaths(methodWithAnnotationValues);
+    public void GETS_SETUP_PATHS_whenValueIsNotEmptyThenReturnsValue() throws Exception {
+        final String[] paths = PathUtil.GETS_SETUP_PATHS.apply(methodWithAnnotationValues);
 
         assertThat(paths, equalTo(VALUES));
     }
 
     @Test
-    public void getRelativeExpectPaths_whenValueEmptyThenUsesMethodNameAndClassToConstructPath() throws Exception {
-        final String[] paths = PathUtil.getRelativeSetupPaths(methodWithoutAnnotationValues);
+    public void GETS_SETUP_PATHS_whenValueEmptyThenUsesMethodNameAndClassToConstructPath() throws Exception {
+        final String[] paths = PathUtil.GETS_SETUP_PATHS.apply(methodWithoutAnnotationValues);
 
         assertThat(paths, equalTo(new String[] {"A/withoutValues"}));
     }
 
     @Test
-    public void getRelativeExpectPaths_whenValueIsNotEmptyThenReturnsValue() throws Exception {
-        final String[] paths = PathUtil.getRelativeExpectPaths(methodWithAnnotationValues);
+    public void GETS_EXPECT_PATHS_whenValueIsNotEmptyThenReturnsValue() throws Exception {
+        final String[] paths = PathUtil.GETS_EXPECT_PATHS.apply(methodWithAnnotationValues);
 
         assertThat(paths, equalTo(VALUES));
     }
 
     @Test
-    public void getRelativeSetupPaths_whenValueEmptyThenUsesMethodNameAndClassToConstructPath() throws Exception {
-        final String[] paths = PathUtil.getRelativeExpectPaths(methodWithoutAnnotationValues);
+    public void GETS_EXPECT_PATHS_whenValueEmptyThenUsesMethodNameAndClassToConstructPath() throws Exception {
+        final String[] paths = PathUtil.GETS_EXPECT_PATHS.apply(methodWithoutAnnotationValues);
 
         assertThat(paths, equalTo(new String[] {"A/expected-withoutValues"}));
     }
