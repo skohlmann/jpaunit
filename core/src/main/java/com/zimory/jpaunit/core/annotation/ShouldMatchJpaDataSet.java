@@ -7,6 +7,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Indicates that the given test method should match a dataset after it finishes executing.
+ */
 @Inherited
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
