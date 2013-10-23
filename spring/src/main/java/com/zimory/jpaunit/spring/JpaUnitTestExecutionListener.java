@@ -4,7 +4,7 @@ import javax.persistence.EntityManagerFactory;
 
 import com.google.common.base.Preconditions;
 import com.zimory.jpaunit.core.JpaUnit;
-import com.zimory.jpaunit.core.JpaUnitConfig;
+import com.zimory.jpaunit.core.context.JpaUnitConfig;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.support.AbstractTestExecutionListener;
 
@@ -23,7 +23,7 @@ public class JpaUnitTestExecutionListener extends AbstractTestExecutionListener 
     }
 
     private static JpaUnit newJpaUnit(final TestContext testContext) {
-        return new JpaUnit(getConfig(testContext), getEntityManagerFactory(testContext));
+        return JpaUnit.newInstance(getConfig(testContext), getEntityManagerFactory(testContext));
     }
 
     private static JpaUnitConfig getConfig(final TestContext testContext) {

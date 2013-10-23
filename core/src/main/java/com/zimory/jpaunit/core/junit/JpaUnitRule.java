@@ -1,10 +1,12 @@
-package com.zimory.jpaunit.core;
+package com.zimory.jpaunit.core.junit;
 
 import java.io.IOException;
 
 import javax.persistence.EntityManagerFactory;
 
 import com.google.common.base.Supplier;
+import com.zimory.jpaunit.core.JpaUnit;
+import com.zimory.jpaunit.core.context.JpaUnitConfig;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.slf4j.Logger;
@@ -41,7 +43,7 @@ public class JpaUnitRule extends TestWatcher {
     }
 
     private JpaUnit newJpaUnit() {
-        return new JpaUnit(config.get(), entityManagerFactory.get());
+        return JpaUnit.newInstance(config.get(), entityManagerFactory.get());
     }
 
 }

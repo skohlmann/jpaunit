@@ -1,4 +1,4 @@
-package com.zimory.jpaunit.core;
+package com.zimory.jpaunit.core.context;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -13,7 +13,7 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 import org.unitils.util.ReflectionUtils;
 
-class TestContext {
+public class TestContext {
 
     private Class<?> testClass;
     private Method testMethod;

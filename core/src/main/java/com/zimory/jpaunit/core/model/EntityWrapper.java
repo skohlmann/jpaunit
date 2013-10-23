@@ -1,19 +1,21 @@
-package com.zimory.jpaunit.core;
+package com.zimory.jpaunit.core.model;
 
 import java.util.Set;
+
+import javax.persistence.PersistenceUnitUtil;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Sets;
 
-final class EntityWrapper {
+public final class EntityWrapper {
 
-    private final Dao dao;
+    private final PersistenceUnitUtil util;
     private final Object entity;
 
-    private EntityWrapper(final Dao dao, final Object entity) {
-        this.dao = dao;
+    private EntityWrapper(final PersistenceUnitUtil util, final Object entity) {
+        this.util = util;
         this.entity = entity;
     }
 
@@ -21,8 +23,12 @@ final class EntityWrapper {
         return entity;
     }
 
-    private Object getEntityId() {
-        return dao.getIdFor(entity);
+    public Object getEntityId() {
+        return util.getIdentifier(entity);
+    }
+
+    public Class<?> getEntityClass() {
+        return entity.getClass();
     }
 
     @Override
@@ -45,25 +51,25 @@ final class EntityWrapper {
         return Objects.equal(getEntityId(), other.getEntityId());
     }
 
-    public static Set<EntityWrapper> wrap(final Dao dao, final Set<Object> entities) {
-        return Sets.newHashSet(Collections2.transform(entities, new WrapperFunction(dao)));
+    public static Set<EntityWrapper> wrap(final PersistenceUnitUtil util, final Set<Object> entities) {
+        return Sets.newHashSet(Collections2.transform(entities, new WrapperFunction(util)));
     }
 
-    public static EntityWrapper wrap(final Dao dao, final Object entity) {
-        return new EntityWrapper(dao, entity);
+    public static EntityWrapper wrap(final PersistenceUnitUtil util, final Object entity) {
+        return new EntityWrapper(util, entity);
     }
 
     private static class WrapperFunction implements Function<Object, EntityWrapper> {
 
-        private final Dao dao;
+        private final PersistenceUnitUtil util;
 
-        private WrapperFunction(final Dao dao) {
-            this.dao = dao;
+        private WrapperFunction(final PersistenceUnitUtil util) {
+            this.util = util;
         }
 
         @Override
         public EntityWrapper apply(final Object input) {
-            return wrap(dao, input);
+            return wrap(util, input);
         }
 
     }

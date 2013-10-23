@@ -1,4 +1,4 @@
-package com.zimory.jpaunit.core;
+package com.zimory.jpaunit.core.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -10,10 +10,9 @@ import com.zimory.jpaunit.core.annotation.GenerateSetupDataSet;
 import com.zimory.jpaunit.core.annotation.ShouldMatchJpaDataSet;
 import com.zimory.jpaunit.core.annotation.UsingJpaDataSet;
 
-final class PathUtil {
+public final class PathUtil {
 
     private static final String EXPECTED_PREFIX = "expected-";
-
     private static final String YAML_EXTENSION = "yml";
 
     private PathUtil() {

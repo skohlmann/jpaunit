@@ -1,4 +1,4 @@
-package com.zimory.jpaunit.core;
+package com.zimory.jpaunit.core.context;
 
 import java.lang.annotation.Annotation;
 import java.util.Comparator;

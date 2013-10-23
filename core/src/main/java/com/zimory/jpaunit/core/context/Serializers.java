@@ -1,4 +1,4 @@
-package com.zimory.jpaunit.core;
+package com.zimory.jpaunit.core.context;
 
 import com.esotericsoftware.yamlbeans.scalar.ScalarSerializer;
 import com.zimory.jpaunit.core.serialization.YamlScalarSerializer;

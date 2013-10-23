@@ -1,4 +1,4 @@
-package com.zimory.jpaunit.core;
+package com.zimory.jpaunit.core.compare;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;

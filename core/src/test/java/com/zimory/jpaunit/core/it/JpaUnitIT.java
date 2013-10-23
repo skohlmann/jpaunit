@@ -8,9 +8,8 @@ import javax.persistence.Persistence;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.Iterables;
-import com.zimory.jpaunit.core.JpaUnitConfig;
-import com.zimory.jpaunit.core.JpaUnitRule;
+import com.zimory.jpaunit.core.context.JpaUnitConfig;
+import com.zimory.jpaunit.core.junit.JpaUnitRule;
 import com.zimory.jpaunit.core.annotation.ShouldMatchJpaDataSet;
 import com.zimory.jpaunit.core.annotation.UsingJpaDataSet;
 import com.zimory.jpaunit.core.it.model.Unit;
@@ -22,6 +21,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
@@ -90,8 +90,9 @@ public class JpaUnitIT {
         final Result result = JUnitCore.runClasses(InnerTest.class);
 
         if (!result.getFailures().isEmpty()) {
-            final Throwable exception = Iterables.getOnlyElement(result.getFailures()).getException();
-            exception.printStackTrace();
+            for (final Failure failure : result.getFailures()) {
+                failure.getException().printStackTrace();
+            }
         }
 
         assertThat(result.wasSuccessful(), equalTo(true));
