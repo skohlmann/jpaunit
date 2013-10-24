@@ -187,6 +187,8 @@ final JpaUnitConfig config = new JpaUnitConfig();
 config.setCustomSerializers(ImmutableList.of(new UuidSerializer()));
 ```
 
+_(actually, the UuidSerializer above is registered by default by jpaunit in addition to all those available from YamlBeans)_
+
 This config can later be fed to the JpaUnitRule via the constructor if using pure JUnit. 
 
 If using Spring Tests, one simply needs to register a single instance of the JpaUnitConfig class in the associated Spring context (the one configured via the ```@org.springframework.test.context.ContextConfiguration``` annotation) and set the list of serializers into that config.
