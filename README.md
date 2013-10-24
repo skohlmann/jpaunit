@@ -1,5 +1,7 @@
 # jpaunit
 
+The idea is simple: forget about the database. Set up and expect database state using your JPA entities.
+
 ## With plain JUnit
 
 ### Code
@@ -134,6 +136,8 @@ public class MyAwesomeTest {
 }
 ```
 
+In case of Spring Tests, jpaunit expects an instance of JpaUnitConfig and JPA EntityManagerFactory to be present in the Spring context.
+
 ## Datasets
 
 ### Location
@@ -151,3 +155,38 @@ Datasets are always looked up in the "/datasets" directory (relative to the clas
 Datasets are written in YAML, as shown above. All rules apply (referencing other entities is possible using YAML syntax, etc.).
 
 Entity types are matched based on the YAML tags, which can reference either the full-blown classname of the entity or the often shorter JPA entity name (e.g. ```!com.acme.Entity``` vs ```!Entity```).
+
+## Custom serializers
+
+Often one might find in need of writing custom serializers for scalar types (the more common types are supported out of the box, thanks to the [YamlBeans library](http://yamlbeans.sourceforge.net/), but custom serializers can be added simply by adding them to the ```JpaUnitConfig``` instance that is being passed to jpaunit.
+
+```
+import java.util.UUID;
+
+import com.zimory.jpaunit.core.serialization.TypedScalarSerializer;
+
+public class UuidSerializer extends TypedScalarSerializer<UUID> {
+
+    public UuidSerializer() {
+        super(UUID.class);
+    }
+
+    @Override
+    public String write(final UUID o) {
+        return o.toString();
+    }
+
+    @Override
+    public UUID read(final String s) {
+        return UUID.fromString(s);
+    }
+
+}
+
+final JpaUnitConfig config = new JpaUnitConfig();
+config.setCustomSerializers(ImmutableList.of(new UuidSerializer()));
+```
+
+This config can later be fed to the JpaUnitRule via the constructor if using pure JUnit. 
+
+If using Spring Tests, one simply needs to register a single instance of the JpaUnitConfig class in the associated Spring context (the one configured via the ```@org.springframework.test.context.ContextConfiguration``` annotation) and set the list of serializers into that config.
