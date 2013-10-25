@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.zimory.jpaunit</groupId>
     <artifactId>jpaunit-parent</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <description>Set up and expect database state using JPA entities</description>
     <url>http://github.com/zimory/jpaunit</url>
