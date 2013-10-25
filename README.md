@@ -1,4 +1,4 @@
-# jpaunit
+# JpaUnit
 
 The idea is simple: forget about the database. Set up and expect database state using your JPA entities.
 
@@ -139,7 +139,7 @@ public class MyAwesomeTest {
 }
 ```
 
-In case of Spring Tests, jpaunit expects an instance of JpaUnitConfig and JPA EntityManagerFactory to be present in the Spring context.
+In case of Spring Tests, JpaUnit expects an instance of JpaUnitConfig and JPA EntityManagerFactory to be present in the Spring context.
 
 ## Datasets
 
@@ -161,7 +161,7 @@ Entity types are matched based on the YAML tags, which can reference either the 
 
 ## Custom serializers
 
-Often one might find in need of writing custom serializers for scalar types (the more common types are supported out of the box, thanks to the [YamlBeans library](http://yamlbeans.sourceforge.net/), but custom serializers can be added simply by adding them to the ```JpaUnitConfig``` instance that is being passed to jpaunit.
+Often one might find in need of writing custom serializers for scalar types (the more common types are supported out of the box, thanks to the [YamlBeans library](http://yamlbeans.sourceforge.net/), but custom serializers can be added simply by adding them to the ```JpaUnitConfig``` instance that is being passed to JpaUnit.
 
 ```
 import java.util.UUID;
@@ -190,7 +190,7 @@ final JpaUnitConfig config = new JpaUnitConfig();
 config.setCustomSerializers(ImmutableList.of(new UuidSerializer()));
 ```
 
-_(actually, the UuidSerializer above is registered by default by jpaunit in addition to all those available from YamlBeans)_
+_(actually, the UuidSerializer above is registered by default by JpaUnit in addition to all those available from YamlBeans)_
 
 This config can later be fed to the JpaUnitRule via the constructor if using pure JUnit. 
 
