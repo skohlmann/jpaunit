@@ -1,6 +1,6 @@
 # JpaUnit
 
-The idea is simple: forget about the database. Set up and expect database state using your JPA entities.
+The idea is simple: forget about the database details – you are using JPA for that exact reason, aren't you? Set up and expect database state using your JPA entities.
 
 ## With plain JUnit
 
@@ -161,7 +161,7 @@ Entity types are matched based on the YAML tags, which can reference either the 
 
 ## Custom serializers
 
-Often one might find in need of writing custom serializers for scalar types (the more common types are supported out of the box, thanks to the [YamlBeans library](http://yamlbeans.sourceforge.net/), but custom serializers can be added simply by adding them to the ```JpaUnitConfig``` instance that is being passed to JpaUnit.
+Often one might find in need of writing custom serializers for scalar types (the more common types are supported out of the box, thanks to the [YamlBeans library](http://yamlbeans.sourceforge.net/)), but custom serializers can be added simply by adding them to the ```JpaUnitConfig``` instance that is being passed to JpaUnit.
 
 ```
 import java.util.UUID;
