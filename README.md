@@ -98,6 +98,7 @@ public class MyAwesomeTest {
 ```
 --- &association1 !Association
 id: 00000000-0000-0000-0000-000000000000
+
 --- !SomeEntity
 id: 00000000-0000-0000-0000-000000000000
 name: old MacDonald had a farm
@@ -110,11 +111,13 @@ associations:
 ```
 --- &association1 !Association
 id: 00000000-0000-0000-0000-000000000000
+
 --- !SomeEntity
 id: 00000000-0000-0000-0000-000000000000
 name: old MacDonald had a farm
 associations:
   - *association1
+
 --- !SomeEntity
 id: 00000000-0000-0000-0000-000000000001
 name: E-I-E-I-O
