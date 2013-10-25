@@ -195,3 +195,20 @@ _(actually, the UuidSerializer above is registered by default by JpaUnit in addi
 This config can later be fed to the JpaUnitRule via the constructor if using pure JUnit. 
 
 If using Spring Tests, one simply needs to register a single instance of the JpaUnitConfig class in the associated Spring context (the one configured via the ```@org.springframework.test.context.ContextConfiguration``` annotation) and set the list of serializers into that config.
+
+## Distribution
+```
+<!-- plain JUnit -->
+<dependency>
+    <groupId>com.zimory.jpaunit</groupId>
+    <artifactId>jpaunit-core</artifactId>
+    <version>1.0.0</version>
+</dependency>
+
+<!-- Spring steroids -->
+<dependency>
+    <groupId>com.zimory.jpaunit</groupId>
+    <artifactId>jpaunit-spring</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
