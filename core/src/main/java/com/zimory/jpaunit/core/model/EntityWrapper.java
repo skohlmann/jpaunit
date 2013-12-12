@@ -48,7 +48,7 @@ public final class EntityWrapper {
 
         final EntityWrapper other = (EntityWrapper) obj;
 
-        return Objects.equal(getEntityId(), other.getEntityId());
+        return getEntityClass() == other.getEntityClass() && Objects.equal(getEntityId(), other.getEntityId());
     }
 
     public static Set<EntityWrapper> wrap(final PersistenceUnitUtil util, final Set<Object> entities) {
