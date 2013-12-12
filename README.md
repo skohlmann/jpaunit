@@ -202,13 +202,13 @@ If using Spring Tests, one simply needs to register a single instance of the Jpa
 <dependency>
     <groupId>com.zimory.jpaunit</groupId>
     <artifactId>jpaunit-core</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </dependency>
 
 <!-- Spring steroids -->
 <dependency>
     <groupId>com.zimory.jpaunit</groupId>
     <artifactId>jpaunit-spring</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </dependency>
 ```
